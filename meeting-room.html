@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>HI Meeting Room Booking</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: #f4f6f8;
+    color: #1f2937;
+}
+
+/* ================= LOGIN ================= */
+
+#loginPage {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.login-box {
+    width: 100%;
+    max-width: 420px;
+    background: white;
+    padding: 35px;
+    border-radius: 15px;
+    box-shadow: 0 5px 25px rgba(0,0,0,.12);
+}
+
+.login-logo {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.login-logo h1 {
+    margin: 0;
+    color: #17365d;
+    font-size: 27px;
+}
+
+.login-logo p {
+    margin-top: 8px;
+    color: #6b7280;
+}
+
+.field {
+    margin-bottom: 16px;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+input,
+select,
+button {
+    width: 100%;
+    padding: 11px;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    font-size: 15px;
+}
+
+button {
+    background: #17365d;
+    color: white;
+    border: 0;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0f2744;
+}
+
+.login-error {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 10px;
+    border-radius: 7px;
+    margin-bottom: 15px;
+    display: none;
+}
+
+/* ================= MAIN PAGE ================= */
+
+#appPage {
+    display: none;
+}
+
+header {
+    background: #17365d;
+    color: white;
+    padding: 20px 28px;
+}
+
+.header-inner {
+    max-width: 1200px;
+    margin: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+header h1 {
+    margin: 0 0 5px;
+    font-size: 27px;
+}
+
+header p {
+    margin: 0;
+    opacity: .85;
+}
+
+/* ================= HI LOGO ================= */
+
+.header-logo {
+    width: 85px;
+    height: auto;
+    object-fit: contain;
+    background: white;
+    padding: 6px;
+    border-radius: 6px;
+}
+
+.logout-btn {
+    width: auto;
+    background: #b42318;
+    padding: 9px 16px;
+}
+
+.logout-btn:hover {
+    background: #8f1d14;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 28px auto;
+    padding: 0 18px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 22px;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: 0 3px 14px rgba(0,0,0,.08);
+}
+
+h2 {
+    margin-top: 0;
+    font-size: 20px;
+}
+
+.notice {
+    padding: 12px;
+    border-radius: 8px;
+    background: #fff7ed;
+    color: #9a3412;
+    margin-bottom: 16px;
+    display: none;
+}
+
+.success {
+    background: #ecfdf3;
+    color: #027a48;
+}
+
+.rooms {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.room {
+    border: 1px solid #d9dee5;
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+}
+
+.room h3 {
+    margin: 4px 0 8px;
+    font-size: 16px;
+}
+
+.status {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.available {
+    color: #16803c;
+}
+
+.busy {
+    color: #b42318;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    text-align: left;
+    padding: 12px 9px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+th {
+    background: #f8fafc;
+}
+
+.empty {
+    text-align: center;
+    color: #6b7280;
+    padding: 25px;
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #6b7280;
+}
+
+/* ================= CANCEL BUTTON ================= */
+
+.cancel-btn {
+    width: auto;
+    background: #b42318;
+    padding: 7px 10px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.cancel-btn:hover {
+    background: #8f1d14;
+}
+
+@media(max-width: 850px) {
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .rooms {
+        grid-template-columns: 1fr;
+    }
+
+    .header-inner {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    table {
+        font-size: 13px;
+    }
+
+    th,
+    td {
+        padding: 9px 6px;
+    }
+
+}
+
+</style>
+</head>
+
+
+<body>
+
+
+<!-- ================= LOGIN ================= -->
+
+<div id="loginPage">
+
+    <div class="login-box">
+
+        <div class="login-logo">
+
+            <h1>HI Meeting Room</h1>
+
+            <p>Meeting Room Booking System</p>
+
+        </div>
+
+
+        <div id="loginError" class="login-error"></div>
+
+
+        <form id="loginForm">
+
+            <div class="field">
+
+                <label for="username">
+                    Username
+                </label>
+
+                <input
+                    id="username"
+                    type="text"
+                    required
+                    placeholder="HI Meeting Room"
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label for="password">
+                    Password
+                </label>
+
+                <input
+                    id="password"
+                    type="password"
+                    required
+                    placeholder="Enter password"
+                >
+
+            </div>
+
+
+            <button type="submit">
+                Login
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+
+<!-- ================= APPLICATION ================= -->
+
+<div id="appPage">
+
+<header>
+
+    <div class="header-inner">
+
+        <div>
+
+            <h1>
+                HI Meeting Room Booking System
+            </h1>
+
+            <p>
+                Check availability and book meeting rooms
+            </p>
+
+        </div>
+
+
+        <div style="display:flex; align-items:center; gap:15px;">
+
+            <img
+                src="hi-logo.png"
+                alt="HI Logo"
+                class="header-logo"
+            >
+
+            <button
+                id="logoutButton"
+                class="logout-btn"
+            >
+                Logout
+            </button>
+
+        </div>
+
+    </div>
+
+</header>
+
+
+
+<div class="container">
+
+<div class="grid">
+
+
+<!-- ================= BOOKING FORM ================= -->
+
+<div class="card">
+
+<h2>
+    Book a Meeting Room
+</h2>
+
+
+<div
+    id="conflict"
+    class="notice"
+></div>
+
+
+<form id="bookingForm">
+
+
+<div class="field">
+
+<label for="name">
+    Booked by
+</label>
+
+<input
+    id="name"
+    required
+    placeholder="Your name"
+>
+
+</div>
+
+
+<div class="field">
+
+<label for="room">
+    Meeting room
+</label>
+
+<select
+    id="room"
+    required
+>
+
+<option value="">
+    Select a room
+</option>
+
+<option>
+    HR Meeting Room
+</option>
+
+<option>
+    Big Meeting Room
+</option>
+
+<option>
+    Grants Meeting Room
+</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label for="date">
+    Date
+</label>
+
+<input
+    id="date"
+    type="date"
+    required
+>
+
+</div>
+
+
+<div class="field">
+
+<label for="start">
+    Start time
+</label>
+
+<input
+    id="start"
+    type="time"
+    required
+>
+
+</div>
+
+
+<div class="field">
+
+<label for="end">
+    End time
+</label>
+
+<input
+    id="end"
+    type="time"
+    required
+>
+
+</div>
+
+
+<div class="field">
+
+<label for="purpose">
+    Meeting / Purpose
+</label>
+
+<input
+    id="purpose"
+    required
+    placeholder="e.g. HR meeting"
+>
+
+</div>
+
+
+<button type="submit">
+    Book Room
+</button>
+
+</form>
+
+</div>
+
+
+
+<!-- ================= BOOKINGS ================= -->
+
+<div class="card">
+
+<h2>
+    Room Availability
+</h2>
+
+
+<div
+    class="rooms"
+    id="roomCards"
+></div>
+
+
+<h2>
+    Current Bookings
+</h2>
+
+
+<div id="bookings">
+
+<div class="loading">
+    Loading bookings...
+</div>
+
+</div>
+
+</div>
+
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- ================= SUPABASE ================= -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+<script>
+
+const SUPABASE_URL =
+    "https://fibxqndfnxpsnemgbeyj.supabase.co";
+
+const SUPABASE_KEY =
+    "sb_publishable_LH-Kx16ObEbcz9i5LiO5YA_0u-fsAyN";
+
+const AUTH_EMAIL =
+    "hi.meeting.room@hi.org";
+
+const SHARED_USERNAME =
+    "HI Meeting Room";
+
+
+const db =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
+
+
+const loginPage =
+    document.getElementById("loginPage");
+
+const appPage =
+    document.getElementById("appPage");
+
+const loginForm =
+    document.getElementById("loginForm");
+
+const loginError =
+    document.getElementById("loginError");
+
+const bookingForm =
+    document.getElementById("bookingForm");
+
+const conflict =
+    document.getElementById("conflict");
+
+const dateInput =
+    document.getElementById("date");
+
+const roomInput =
+    document.getElementById("room");
+
+const startInput =
+    document.getElementById("start");
+
+const endInput =
+    document.getElementById("end");
+
+const nameInput =
+    document.getElementById("name");
+
+const purposeInput =
+    document.getElementById("purpose");
+
+const roomCards =
+    document.getElementById("roomCards");
+
+const bookingsDiv =
+    document.getElementById("bookings");
+
+const logoutButton =
+    document.getElementById("logoutButton");
+
+
+const ROOMS = [
+
+    "HR Meeting Room",
+
+    "Big Meeting Room",
+
+    "Grants Meeting Room"
+
+];
+
+
+function getAfghanistanDate() {
+
+    const parts =
+        new Intl.DateTimeFormat(
+            "en-CA",
+            {
+                timeZone: "Asia/Kabul",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit"
+            }
+        ).formatToParts(new Date());
+
+    const year =
+        parts.find(
+            p => p.type === "year"
+        ).value;
+
+    const month =
+        parts.find(
+            p => p.type === "month"
+        ).value;
+
+    const day =
+        parts.find(
+            p => p.type === "day"
+        ).value;
+
+    return `${year}-${month}-${day}`;
+
+}
+
+
+function getAfghanistanTime() {
+
+    return new Intl.DateTimeFormat(
+        "en-GB",
+        {
+            timeZone: "Asia/Kabul",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
+        }
+    ).format(new Date());
+
+}
+
+
+function afghanistanToISO(
+    date,
+    time
+) {
+
+    return new Date(
+        `${date}T${time}:00+04:30`
+    ).toISOString();
+
+}
+
+
+dateInput.value =
+    getAfghanistanDate();
+
+dateInput.min =
+    getAfghanistanDate();
+
+
+
+/* ================= LOGIN ================= */
+
+loginForm.addEventListener(
+    "submit",
+    async function(e) {
+
+        e.preventDefault();
+
+        loginError.style.display =
+            "none";
+
+        const username =
+            document
+            .getElementById("username")
+            .value
+            .trim();
+
+        const password =
+            document
+            .getElementById("password")
+            .value;
+
+        if (
+            username !== SHARED_USERNAME
+        ) {
+
+            showLoginError(
+                "Invalid username or password."
+            );
+
+            return;
+
+        }
+
+        const {
+            error
+        } =
+            await db.auth.signInWithPassword({
+
+                email:
+                    AUTH_EMAIL,
+
+                password:
+                    password
+
+            });
+
+        if (error) {
+
+            console.error(error);
+
+            showLoginError(
+                "Invalid username or password."
+            );
+
+            return;
+
+        }
+
+        showApplication();
+
+    }
+);
+
+
+function showLoginError(message) {
+
+    loginError.textContent =
+        message;
+
+    loginError.style.display =
+        "block";
+
+}
+
+
+function showApplication() {
+
+    loginPage.style.display =
+        "none";
+
+    appPage.style.display =
+        "block";
+
+    loadBookings();
+
+}
+
+
+/* ================= LOGOUT ================= */
+
+logoutButton.addEventListener(
+    "click",
+    async function() {
+
+        await db.auth.signOut();
+
+        appPage.style.display =
+            "none";
+
+        loginPage.style.display =
+            "flex";
+
+        loginForm.reset();
+
+    }
+);
+
+
+
+/* ================= LOAD BOOKINGS ================= */
+
+async function loadBookings() {
+
+    const {
+        data,
+        error
+    } =
+        await db
+        .from("bookings")
+        .select("*")
+        .order(
+            "date",
+            {
+                ascending: true
+            }
+        )
+        .order(
+            "start_time",
+            {
+                ascending: true
+            }
+        );
+
+    if (error) {
+
+        console.error(error);
+
+        bookingsDiv.innerHTML =
+            `<div class="notice" style="display:block">
+                Unable to load bookings.
+             </div>`;
+
+        return;
+
+    }
+
+    renderBookings(
+        data || []
+    );
+
+}
+
+
+
+/* ================= RENDER BOOKINGS ================= */
+
+function renderBookings(bookings) {
+
+    const selectedDate =
+        dateInput.value;
+
+    const activeBookings =
+        bookings.filter(
+            b =>
+                new Date(b.end_at) >
+                new Date()
+        );
+
+    renderRoomCards(
+        activeBookings,
+        selectedDate
+    );
+
+
+    if (!activeBookings.length) {
+
+        bookingsDiv.innerHTML =
+            '<div class="empty">No bookings yet.</div>';
+
+        return;
+
+    }
+
+
+    bookingsDiv.innerHTML = `
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Room</th>
+
+<th>Date</th>
+
+<th>Time</th>
+
+<th>Booked by</th>
+
+<th>Purpose</th>
+
+<th>Action</th>
+
+</tr>
+
+</thead>
+
+
+<tbody>
+
+${
+    activeBookings
+    .map(
+        b => `
+
+<tr>
+
+<td>
+${escapeHTML(b.room)}
+</td>
+
+<td>
+${formatDate(b.date)}
+</td>
+
+<td>
+${formatTime(b.start_time)}
+–
+${formatTime(b.end_time)}
+</td>
+
+<td>
+${escapeHTML(b.name)}
+</td>
+
+<td>
+${escapeHTML(b.purpose)}
+</td>
+
+<td>
+
+<button
+    type="button"
+    class="cancel-btn"
+    onclick="cancelBooking('${escapeHTML(b.id)}')"
+>
+    Cancel
+</button>
+
+</td>
+
+</tr>
+
+`
+    )
+    .join("")
+}
+
+</tbody>
+
+</table>
+
+`;
+
+}
+
+
+
+/* ================= ROOM CARDS ================= */
+
+function renderRoomCards(
+    bookings,
+    selectedDate
+) {
+
+    roomCards.innerHTML =
+        ROOMS
+        .map(
+            room => {
+
+                const roomBookings =
+                    bookings.filter(
+                        b =>
+                            b.room === room &&
+                            b.date === selectedDate
+                    );
+
+                const busy =
+                    roomBookings.length > 0;
+
+                let details =
+                    "Available";
+
+                if (busy) {
+
+                    details =
+                        roomBookings
+                        .map(
+                            b =>
+                                `${formatTime(b.start_time)}
+                                –
+                                ${formatTime(b.end_time)}`
+                        )
+                        .join("<br>");
+
+                }
+
+                return `
+
+<div class="room">
+
+<h3>
+${room}
+</h3>
+
+<div
+class="status
+${busy ? "busy" : "available"}"
+>
+
+${busy ? "Booked" : "Available"}
+
+</div>
+
+${
+    busy
+    ?
+    `<div
+    style="
+    margin-top:7px;
+    font-size:12px;
+    "
+    >
+    ${details}
+    </div>`
+    :
+    ""
+}
+
+</div>
+
+`;
+
+            }
+        )
+        .join("");
+
+}
+
+
+
+/* ================= CREATE BOOKING ================= */
+
+bookingForm.addEventListener(
+    "submit",
+    async function(e) {
+
+        e.preventDefault();
+
+        conflict.style.display =
+            "none";
+
+        const name =
+            nameInput.value.trim();
+
+        const room =
+            roomInput.value;
+
+        const date =
+            dateInput.value;
+
+        const start =
+            startInput.value;
+
+        const end =
+            endInput.value;
+
+        const purpose =
+            purposeInput.value.trim();
+
+
+        if (
+            !name ||
+            !room ||
+            !date ||
+            !start ||
+            !end ||
+            !purpose
+        ) {
+
+            showConflict(
+                "Please complete all fields."
+            );
+
+            return;
+
+        }
+
+
+        if (start >= end) {
+
+            showConflict(
+                "End time must be later than start time."
+            );
+
+            return;
+
+        }
+
+
+        const today =
+            getAfghanistanDate();
+
+
+        if (date < today) {
+
+            showConflict(
+                "You cannot book a previous date."
+            );
+
+            return;
+
+        }
+
+
+        if (
+            date === today &&
+            start <= getAfghanistanTime()
+        ) {
+
+            showConflict(
+                "Start time must be later than the current Afghanistan time."
+            );
+
+            return;
+
+        }
+
+
+        const startAt =
+            afghanistanToISO(
+                date,
+                start
+            );
+
+
+        const endAt =
+            afghanistanToISO(
+                date,
+                end
+            );
+
+
+        const {
+            error
+        } =
+            await db
+            .from("bookings")
+            .insert({
+
+                name:
+                    name,
+
+                room:
+                    room,
+
+                date:
+                    date,
+
+                start_time:
+                    start,
+
+                end_time:
+                    end,
+
+                purpose:
+                    purpose,
+
+                start_at:
+                    startAt,
+
+                end_at:
+                    endAt
+
+            });
+
+
+        if (error) {
+
+            console.error(error);
+
+
+            if (
+                error.code === "23P01"
+            ) {
+
+                showConflict(
+                    `${room} is already booked during this time. Please choose another time.`
+                );
+
+            } else {
+
+                showConflict(
+                    "Booking could not be created. Please try again."
+                );
+
+            }
+
+            return;
+
+        }
+
+
+        bookingForm.reset();
+
+
+        dateInput.value =
+            date;
+
+
+        dateInput.min =
+            getAfghanistanDate();
+
+
+        conflict.className =
+            "notice success";
+
+
+        conflict.textContent =
+            "Room booked successfully.";
+
+
+        conflict.style.display =
+            "block";
+
+
+        await loadBookings();
+
+
+        setTimeout(
+            function() {
+
+                conflict.style.display =
+                    "none";
+
+                conflict.className =
+                    "notice";
+
+            },
+            4000
+        );
+
+    }
+);
+
+
+
+/* ================= ADMIN CANCEL ================= */
+
+async function cancelBooking(bookingId) {
+
+    const confirmed =
+        confirm(
+            "Do you want to cancel this meeting room booking?"
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    const adminPassword =
+        prompt(
+            "Enter Admin Cancel Password:"
+        );
+
+
+    if (
+        adminPassword === null ||
+        adminPassword.trim() === ""
+    ) {
+
+        return;
+
+    }
+
+
+    const {
+        data,
+        error
+    } =
+        await db.rpc(
+            "cancel_meeting_booking",
+            {
+                p_booking_id:
+                    bookingId,
+
+                p_admin_password:
+                    adminPassword
+            }
+        );
+
+
+    if (error) {
+
+        console.error(error);
+
+        alert(
+            "Cancellation failed. Please check the Admin Cancel Password."
+        );
+
+        return;
+
+    }
+
+
+    if (!data) {
+
+        alert(
+            "This booking was not found or has already been cancelled."
+        );
+
+        await loadBookings();
+
+        return;
+
+    }
+
+
+    alert(
+        "Booking cancelled successfully."
+    );
+
+
+    await loadBookings();
+
+}
+
+
+
+/* ================= MESSAGES ================= */
+
+function showConflict(message) {
+
+    conflict.className =
+        "notice";
+
+    conflict.textContent =
+        message;
+
+    conflict.style.display =
+        "block";
+
+}
+
+
+
+/* ================= DATE FORMAT ================= */
+
+function formatDate(date) {
+
+    const parts =
+        date.split("-");
+
+    return (
+        parts[2] +
+        "-" +
+        parts[1] +
+        "-" +
+        parts[0]
+    );
+
+}
+
+
+
+/* ================= TIME FORMAT ================= */
+
+function formatTime(time) {
+
+    const parts =
+        time
+        .substring(
+            0,
+            5
+        )
+        .split(":");
+
+
+    let hour =
+        parseInt(
+            parts[0],
+            10
+        );
+
+
+    const minute =
+        parts[1];
+
+
+    const ampm =
+        hour >= 12
+        ? "PM"
+        : "AM";
+
+
+    hour =
+        hour % 12 ||
+        12;
+
+
+    return `${hour}:${minute} ${ampm}`;
+
+}
+
+
+
+/* ================= HTML SECURITY ================= */
+
+function escapeHTML(value) {
+
+    return String(value)
+        .replace(
+            /[&<>"']/g,
+            function(m) {
+
+                return {
+
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    '"': "&quot;",
+                    "'": "&#039;"
+
+                }[m];
+
+            }
+        );
+
+}
+
+
+
+/* ================= DATE CHANGE ================= */
+
+dateInput.addEventListener(
+    "change",
+    loadBookings
+);
+
+
+
+/* ================= AUTO REFRESH ================= */
+
+setInterval(
+    loadBookings,
+    30000
+);
+
+
+
+/* ================= SESSION ================= */
+
+async function checkSession() {
+
+    const {
+        data
+    } =
+        await db.auth.getSession();
+
+
+    if (
+        data &&
+        data.session
+    ) {
+
+        showApplication();
+
+    } else {
+
+        loginPage.style.display =
+            "flex";
+
+        appPage.style.display =
+            "none";
+
+    }
+
+}
+
+
+
+/* ================= AUTH STATE ================= */
+
+db.auth.onAuthStateChange(
+    function(
+        event,
+        session
+    ) {
+
+        if (session) {
+
+            showApplication();
+
+        } else {
+
+            appPage.style.display =
+                "none";
+
+            loginPage.style.display =
+                "flex";
+
+        }
+
+    }
+);
+
+
+checkSession();
+
+</script>
+
+</body>
+
+</html>
