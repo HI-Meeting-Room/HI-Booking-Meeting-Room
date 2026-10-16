@@ -1052,71 +1052,59 @@ function renderRoomCards(
     selectedDate
 ) {
 
-    const selectedDayStart =
-        new Date(`${selectedDate}T00:00:00+04:30`);
-
-    const selectedDayEnd =
-        new Date(`${selectedDate}T23:59:59+04:30`);
+    /*
+     * A multi-day booking reserves only its daily time slot on each date
+     * from date through end_date (inclusive). It does not reserve the room
+     * for the whole day or for the full date range.
+     */
+    const selectedStartTime = startInput.value;
+    const selectedEndTime = endInput.value;
+    const hasSelectedTime = Boolean(selectedStartTime && selectedEndTime);
+    const validSelectedTime = hasSelectedTime && selectedEndTime > selectedStartTime;
 
     roomCards.innerHTML =
         ROOMS
         .map(
             room => {
 
-                const roomBookings =
-                    bookings.filter(
-                        b => {
+                const roomBookings = bookings.filter(b => {
+                    if (b.room !== room) {
+                        return false;
+                    }
 
-                            if (b.room !== room) {
-                                return false;
-                            }
+                    // The selected date must fall within the booking's date range.
+                    if (selectedDate < b.date || selectedDate > (b.end_date || b.date)) {
+                        return false;
+                    }
 
-                            const bookingStart =
-                                new Date(b.start_at);
+                    // If a valid time range has been selected, check time overlap.
+                    // [start, end) allows back-to-back bookings.
+                    if (validSelectedTime) {
+                        return (
+                            selectedStartTime < String(b.end_time).substring(0, 5) &&
+                            selectedEndTime > String(b.start_time).substring(0, 5)
+                        );
+                    }
 
-                            const bookingEnd =
-                                new Date(b.end_at);
+                    // Before times are selected, show the room as booked if
+                    // it has any booking on the selected date.
+                    return true;
+                });
 
-                            /*
-                             * The room is busy on the selected date
-                             * whenever the booking overlaps that date.
-                             */
-                            return (
-                                bookingStart <= selectedDayEnd &&
-                                bookingEnd >= selectedDayStart
-                            );
+                const busy = roomBookings.length > 0;
 
-                        }
-                    );
-
-                const busy =
-                    roomBookings.length > 0;
-
-                let details =
-                    "Available";
+                let details = "Available";
 
                 if (busy) {
-
-                    details =
-                        roomBookings
-                        .map(
-                            b => {
-
-                                const dateText =
-                                    formatBookingDateRange(
-                                        b.date,
-                                        b.end_date
-                                    );
-
-                                return `${dateText}<br>
-                                    ${formatTime(b.start_time)}
-                                    –
-                                    ${formatTime(b.end_time)}`;
-
-                            }
-                        )
+                    details = roomBookings
+                        .map(b => {
+                            const dateText = formatBookingDateRange(b.date, b.end_date);
+                            return `${dateText}<br>
+                                ${formatTime(b.start_time)}
+                                –
+                                ${formatTime(b.end_time)}`;
+                        })
                         .join("<br><br>");
-
                 }
 
                 return `
@@ -1239,6 +1227,18 @@ bookingForm.addEventListener(
             );
 
 
+        // A daily recurring booking must end later on the same day.
+        // Overnight time slots are not supported.
+        if (end <= start) {
+
+            showConflict(
+                "End time must be later than start time for a daily booking."
+            );
+
+            return;
+
+        }
+
         if (
             new Date(endAt) <=
             new Date(startAt)
@@ -1283,9 +1283,10 @@ bookingForm.addEventListener(
 
 
         /*
-         * The database exclusion constraint must compare the complete
-         * start_at/end_at interval. This prevents overlapping bookings
-         * even when the booking crosses one or more calendar dates.
+         * Supabase's exclusion constraint checks the room, inclusive date
+         * range, and daily time range. This prevents overlapping daily slots
+         * on any date in a multi-day booking while allowing non-overlapping
+         * times and back-to-back bookings.
          */
         const {
             error
@@ -1443,6 +1444,11 @@ endDateInput.addEventListener(
 
     }
 );
+
+
+// Refresh room availability when the selected daily time slot changes.
+startInput.addEventListener("change", loadBookings);
+endInput.addEventListener("change", loadBookings);
 
 
 /* ================= ADMIN CANCEL ================= */
